@@ -22,7 +22,7 @@ jobs:
       - name: Download private website
         uses: actions/checkout@v6
         with:
-          repository: HermannTheGSD/hermannsoft-website-private
+          repository: HermannTheGSD/website_private_files
           ref: main
           token: ${{ secrets.PRIVATE_SITE_READ_TOKEN }}
           path: site
