@@ -22,7 +22,7 @@ jobs:
       contents: read
 
     steps:
-      - name: Download private Silex website
+      - name: Download latest Silex files
         uses: actions/checkout@v6
         with:
           repository: HermannTheGSD/hermannsoft-silex-source
@@ -31,27 +31,25 @@ jobs:
           path: site
           persist-credentials: false
 
-      - name: Prepare static website
+      - name: Prepare website files
         shell: bash
         run: |
           set -euo pipefail
 
-          echo "Checking Silex website files"
-
           test -f site/public/index.html
 
           mkdir -p publish
-
           cp -a site/public/. publish/
-
-          rm -f publish/public.11tydata.js
-          rm -f publish/public.11tydata.json
 
           test -f publish/index.html
 
-          echo "Website files prepared successfully"
+          echo "Website source:"
+          git -C site rev-parse HEAD
 
-          find publish -maxdepth 2 -type f | head -40
+          echo "Files to publish:"
+          find publish -maxdepth 2 -type f
+
+          echo "Website preparation successful"
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
