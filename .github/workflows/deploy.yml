@@ -22,7 +22,7 @@ jobs:
       contents: read
 
     steps:
-      - name: Download private Silex project
+      - name: Download private Silex website
         uses: actions/checkout@v6
         with:
           repository: HermannTheGSD/hermannsoft-silex-source
@@ -31,20 +31,27 @@ jobs:
           path: site
           persist-credentials: false
 
-      - name: Install Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          package-manager-cache: false
-
-      - name: Build Silex website
-        working-directory: site
+      - name: Prepare static website
         shell: bash
         run: |
-          set -e
-          test -f build.sh
-          sh build.sh
-          test -f _site/index.html
+          set -euo pipefail
+
+          echo "Checking Silex website files"
+
+          test -f site/public/index.html
+
+          mkdir -p publish
+
+          cp -a site/public/. publish/
+
+          rm -f publish/public.11tydata.js
+          rm -f publish/public.11tydata.json
+
+          test -f publish/index.html
+
+          echo "Website files prepared successfully"
+
+          find publish -maxdepth 2 -type f | head -40
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
@@ -52,7 +59,7 @@ jobs:
       - name: Upload website
         uses: actions/upload-pages-artifact@v5
         with:
-          path: site/_site
+          path: publish
 
   deploy:
     name: Deploy website
