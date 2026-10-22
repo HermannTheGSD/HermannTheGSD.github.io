@@ -1,0 +1,71 @@
+
+name: Publish HermannSoft Website
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Prepare website
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download private website
+        uses: actions/checkout@v6
+        with:
+          repository: HermannTheGSD/hermannsoft-website-private
+          ref: main
+          token: ${{ secrets.PRIVATE_SITE_READ_TOKEN }}
+          path: site
+          persist-credentials: false
+
+      - name: Prepare public website files
+        shell: bash
+        run: |
+          set -e
+          mkdir -p public
+
+          cp site/*.html public/
+
+          for dir in assets css js; do
+            if [ -d "site/$dir" ]; then
+              cp -R "site/$dir" public/
+            fi
+          done
+
+          test -f public/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+  deploy:
+    name: Deploy website
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Publish GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
