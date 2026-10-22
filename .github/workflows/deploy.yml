@@ -6,51 +6,53 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "7,22,37,52 * * * *"
 
 concurrency:
-  group: github-pages
-  cancel-in-progress: false
+  group: hermannsoft-pages
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Prepare website
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
 
     steps:
-      - name: Download private website
+      - name: Download private Silex project
         uses: actions/checkout@v6
         with:
-          repository: HermannTheGSD/website_private_files
+          repository: HermannTheGSD/hermannsoft-silex-source
           ref: main
           token: ${{ secrets.PRIVATE_SITE_READ_TOKEN }}
           path: site
           persist-credentials: false
 
-      - name: Prepare public website files
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Build Silex website
+        working-directory: site
         shell: bash
         run: |
           set -e
-          mkdir -p public
+          test -f build.sh
+          sh build.sh
+          test -f _site/index.html
 
-          cp site/*.html public/
-
-          for dir in assets css js; do
-            if [ -d "site/$dir" ]; then
-              cp -R "site/$dir" public/
-            fi
-          done
-
-          test -f public/index.html
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
 
       - name: Upload website
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
-          path: public
+          path: site/_site
 
   deploy:
     name: Deploy website
